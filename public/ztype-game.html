@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ztype Game - Code Typing Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1e1e2e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            color: #00ff88;
+            padding: 20px;
+            overflow: hidden;
+        }
+        :root {
+            --primary: #00ff88;
+            --bg-1: #0f0f1e;
+            --bg-2: #1e1e2e;
+            --muted: rgba(0,255,136,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--primary);
+            padding: clamp(12px, 2vw, 24px);
+        }
+
+        .game-title-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            z-index: 100;
+        }
+
+        .game-icon {
+            width: 50px;
+            height: 50px;
+            background: #00ff88;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 25px;
+            color: #0f0f1e;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .game-title {
+            font-size: 24px;
+            color: #00ff88;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            line-height: 1.3;
+        }
+
+        .game-header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid #00ff88;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            z-index: 100;
+        }
+        .game-header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--muted);
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            position: sticky;
+            top: 12px;
+            z-index: 120;
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-label {
+            color: rgba(0, 255, 136, 0.7);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 4px;
+        }
+
+        .life-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background: #00ff88;
+            border-radius: 2px;
+        }
+
+        .life-icon.lost {
+            background: #444;
+            opacity: 0.5;
+        }
+
+        #gameArea {
+            width: 100%;
+            max-width: 1200px;
+            height: 600px;
+            background: #0f0f1e;
+            border: 3px solid #00ff88;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+            margin-bottom: 15px;
+        }
+        #gameArea {
+            width: 100%;
+            max-width: 1200px;
+            height: calc(100vh - 260px);
+            min-height: 320px;
+            background: var(--bg-1);
+            border: 3px solid var(--primary);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
+            margin-bottom: 12px;
+        }
+
+        .word {
+            position: absolute;
+            padding: 8px 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            border-radius: 4px;
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 16px;
+            white-space: nowrap;
+            cursor: default;
+            -webkit-user-select: none;
+            user-select: none;
+            letter-spacing: 1px;
+            transition: all 0.1s;
+        }
+
+        .word.typed {
+            color: #888;
+            border-color: #666;
+            opacity: 0.6;
+        }
+
+        .word.completed {
+            color: #00ff88;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+            animation: destroy 0.5s ease-out forwards;
+        }
+
+        @keyframes destroy {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        .input-area {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        .input-area {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 10px;
+            z-index: 120;
+            align-items: center;
+        }
+
+        /* ensure header and input sit above the game area */
+        .game-header, .input-area {
+            position: relative;
+            z-index: 110;
+        }
+
+        #gameInput {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #gameInput:focus {
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        #gameInput::placeholder {
+            color: rgba(0, 255, 136, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: transparent;
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 16px;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.18s ease;
+            font-size: clamp(12px, 1.6vw, 14px);
+        }
+
+        button:hover:not(:disabled) {
+            background: #00ff88;
+            color: #0f0f1e;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e1e2e;
+            border: 3px solid #00ff88;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .modal-content h2 {
+            font-size: 32px;
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        #saveStatus {
+            color: #00ff88;
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .modal-content label {
+            color: #00ff88;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .difficulty-select {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            background: #0f0f1e;
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .difficulty-select option {
+            background: #1e1e2e;
+            color: #00ff88;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .game-over-stats {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            color: #888;
+        }
+
+        .stat-row .label {
+            color: rgba(0, 255, 136, 0.7);
+        }
+
+        .stat-row .value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            #gameArea {
+                height: calc(100vh - 260px);
+            }
+
+            .game-title {
+                font-size: 18px;
+            }
+
+            .stats {
+                gap: 20px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+        }
+
+        /* Floating HUD: hidden on wide screens (header visible). Shown on small screens or fullscreen. */
+        .game-hud {
+            position: fixed;
+            right: 12px;
+            top: 12px;
+            display: none; /* default hidden */
+            gap: 8px;
+            z-index: 130;
+            pointer-events: none;
+        }
+
+        .hud-item {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid var(--primary);
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--primary);
+            pointer-events: none;
+        }
+
+        /* show HUD on small screens where header might be hidden */
+        @media (max-width: 1000px) {
+            .game-hud { display: flex; }
+        }
+
+        /* also show HUD when body has .show-hud (used for fullscreen) */
+        body.show-hud .game-hud { display: flex; }
+    </style>
+</head>
+<body>
+    <div class="game-title-container">
+        <div class="game-icon">⌨️</div>
+        <div class="game-title">Ztype Game<br>(Standalone)</div>
+    </div>
+
+    <div class="game-header">
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">LIVES</span>
+                <div class="lives-container" id="livesDisplay">
+                    <span class="life-icon"></span>
+                    <span class="life-icon"></span>
+                    <span class="life-icon"></span>
+                </div>
+            </div>
+            <div class="stat">
+                <span class="stat-label">SCORE</span>
+                <span class="stat-value" id="scoreDisplay">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">TYPING SPEED</span>
+                <span class="stat-value" id="wpmDisplay">0 WPM</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">LEVEL</span>
+                <span class="stat-value" id="levelDisplay">1</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">ACCURACY</span>
+                <span class="stat-value" id="accuracyDisplay">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameArea"></div>
+
+    <!-- Floating HUD removed to avoid overlaying controls -->
+
+    <div class="input-area">
+        <input type="text" id="gameInput" placeholder="Type words to destroy them..." autocomplete="off" disabled>
+        <div class="button-group">
+            <button id="startBtn" onclick="startGame()">Start</button>
+            <button id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
+            <button id="restartBtn" onclick="restartGame()" disabled>Restart</button>
+            <button onclick="goToDashboard()">Home</button>
+        </div>
+    </div>
+
+    <!-- Start Modal -->
+    <div class="modal active" id="startModal">
+        <div class="modal-content" style="position:relative;">
+            <button id="close-modal-btn" style="position:absolute;top:10px;right:18px;font-size:2rem;background:none;border:none;color:#00ff88;cursor:pointer;z-index:10;">&times;</button>
+            <h2>Ztype Game</h2>
+            <p>Destroy falling words by typing them correctly!</p>
+            
+            <label for="difficultySelect">Select Difficulty:</label>
+            <select class="difficulty-select" id="difficultySelect">
+                <option value="easy">Easy - Slower words</option>
+                <option value="medium" selected>Normal - Normal speed</option>
+                <option value="hard">Hard - Faster words</option>
+            </select>
+
+            <div class="modal-buttons">
+                <button onclick="startGame()">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>GAME OVER</h2>
+            
+            <div class="game-over-stats">
+                <div class="stat-row">
+                    <span class="label">Final Score:</span>
+                    <span class="value" id="finalScore">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Level Reached:</span>
+                    <span class="value" id="finalLevel">1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Words Destroyed:</span>
+                    <span class="value" id="finalWords">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="label">Accuracy:</span>
+                    <span class="value" id="finalAccuracy">0%</span>
+                </div>
+            </div>
+
+            <div id="saveStatus">Saved to progress</div>
+
+            <div class="modal-buttons">
+                <button onclick="restartGame()">Play Again</button>
+                <button onclick="goToDashboard()">Home</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            isRunning: false,
+            isPaused: false,
+            currentLevel: 1,
+            score: 0,
+            lives: 3,
+            maxLives: 3,
+            wordsDestroyed: 0,
+            difficulty: 'medium',
+            wordsList: [],
+            totalKeystrokes: 0,
+            correctKeystrokes: 0,
+            startTime: null,
+            pausedAt: null,
+            pausedDuration: 0,
+            wpm: 0,
+            accuracy: 100
+        };
+
+        // Difficulty settings
+        const difficultySettings = {
+            easy: { speed: 0.5, spawnRate: 1500, health: 150 },
+            medium: { speed: 1, spawnRate: 1200, health: 100 },
+            hard: { speed: 1.8, spawnRate: 800, health: 60 }
+        };
+
+        // Word pool
+        const words = [
+            'function', 'variable', 'return', 'array', 'object', 'string',
+            'number', 'boolean', 'const', 'let', 'var', 'class', 'async',
+            'await', 'promise', 'fetch', 'api', 'javascript', 'python',
+            'database', 'server', 'client', 'response', 'request', 'header',
+            'body', 'status', 'code', 'error', 'debug', 'console', 'log',
+            'interface', 'type', 'generic', 'module', 'import', 'export',
+            'package', 'library', 'framework', 'tool', 'test', 'build'
+        ];
+
+        const gameArea = document.getElementById('gameArea') || createGameArea();
+        const gameInput = document.getElementById('gameInput');
+        let gameLoopId = null;
+        let spawnLoopId = null;
+
+        function createGameArea() {
+            const area = document.createElement('div');
+            area.id = 'gameArea';
+            area.style.width = '100%';
+            area.style.maxWidth = '1200px';
+            area.style.height = '600px';
+            area.style.background = '#0f0f1e';
+            area.style.border = '3px solid #00ff88';
+            area.style.borderRadius = '5px';
+            area.style.position = 'relative';
+            area.style.overflow = 'hidden';
+            area.style.boxShadow = '0 0 30px rgba(0, 255, 136, 0.2)';
+            document.body.insertBefore(area, document.querySelector('.input-area'));
+            return area;
+        }
+
+        function updateLivesDisplay() {
+            const livesDisplay = document.getElementById('livesDisplay');
+            livesDisplay.innerHTML = '';
+            for (let i = 0; i < gameState.maxLives; i++) {
+                const lifeIcon = document.createElement('span');
+                lifeIcon.className = 'life-icon' + (i < gameState.lives ? '' : ' lost');
+                livesDisplay.appendChild(lifeIcon);
+            }
+            // update HUD mirror (show values without letter prefixes)
+            const hudLives = document.getElementById('hudLives');
+            if (hudLives) hudLives.textContent = gameState.lives;
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            // update level display
+            const lvlEl = document.getElementById('levelDisplay'); if (lvlEl) lvlEl.textContent = gameState.currentLevel;
+            
+            // Calculate WPM
+            if (gameState.startTime) {
+                const now = Date.now();
+                const paused = gameState.pausedDuration || 0;
+                const currentPaused = gameState.pausedAt ? (now - gameState.pausedAt) : 0;
+                const effectiveMs = Math.max(0, now - gameState.startTime - paused - currentPaused);
+                const timeMinutes = effectiveMs / 60000;
+                const words = gameState.correctKeystrokes / 5;
+                gameState.wpm = timeMinutes > 0 ? Math.round(words / timeMinutes) : 0;
+                document.getElementById('wpmDisplay').textContent = gameState.wpm + ' WPM';
+                // Floating HUD removed; header displays WPM/level/accuracy now.
+            }
+            
+            // Calculate accuracy and clamp to 0-100
+            if (gameState.totalKeystrokes > 0) {
+                gameState.accuracy = Math.round((gameState.correctKeystrokes / gameState.totalKeystrokes) * 100);
+            } else {
+                // No keystrokes yet — show 0% accuracy instead of retaining previous value
+                gameState.accuracy = 0;
+            }
+            if (!isFinite(gameState.accuracy) || isNaN(gameState.accuracy)) gameState.accuracy = 0;
+            if (gameState.accuracy > 100) gameState.accuracy = 100;
+            if (gameState.accuracy < 0) gameState.accuracy = 0;
+            document.getElementById('accuracyDisplay').textContent = gameState.accuracy + '%';
+            // Floating HUD removed; no mirrored HUD updates required.
+        }
+
+        function startGame() {
+            const difficulty = document.getElementById('difficultySelect').value;
+            gameState.difficulty = difficulty;
+            gameState.lives = 3;
+            gameState.maxLives = 3;
+            gameState.score = 0;
+            gameState.wordsDestroyed = 0;
+            gameState.currentLevel = 1;
+            gameState.totalKeystrokes = 0;
+            gameState.correctKeystrokes = 0;
+            gameState.startTime = Date.now();
+            
+            document.getElementById('startModal').classList.remove('active');
+            gameState.isRunning = true;
+            gameInput.disabled = false;
+            gameInput.focus();
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('restartBtn').disabled = false;
+
+            updateLivesDisplay();
+            updateStatsDisplay();
+            spawnWords();
+            gameLoop();
+        }
+
+        function spawnWords() {
+            if (!gameState.isRunning) return;
+
+            const word = words[Math.floor(Math.random() * words.length)];
+            const x = Math.random() * (gameArea.clientWidth - 150);
+            
+            const wordEl = document.createElement('div');
+            wordEl.className = 'word';
+            wordEl.textContent = word;
+            wordEl.style.left = x + 'px';
+            wordEl.style.top = '-50px';
+            wordEl.dataset.word = word;
+            
+            const wordObj = {
+                element: wordEl,
+                word: word,
+                x: x,
+                y: -50,
+                typed: ''
+            };
+
+            gameState.wordsList.push(wordObj);
+            gameArea.appendChild(wordEl);
+
+            spawnLoopId = setTimeout(spawnWords, difficultySettings[gameState.difficulty].spawnRate);
+        }
+
+        function gameLoop() {
+            if (!gameState.isRunning) return;
+
+            // Update word positions
+            gameState.wordsList = gameState.wordsList.filter(wordObj => {
+                const speed = difficultySettings[gameState.difficulty].speed;
+                wordObj.y += speed;
+                wordObj.element.style.top = wordObj.y + 'px';
+
+                // Check if word passed the bottom (missed)
+                if (wordObj.y > gameArea.clientHeight) {
+                    gameState.lives--;
+                    updateLivesDisplay();
+                    wordObj.element.remove();
+                    
+                    if (gameState.lives <= 0) {
+                        endGame();
+                        return true;
+                    }
+                    return false;
+                }
+
+                return true;
+            });
+
+            updateStatsDisplay();
+
+            // Check game over
+            if (gameState.lives <= 0) {
+                return;
+            }
+
+            // Increase level based on words destroyed
+            if (gameState.wordsDestroyed > 0 && gameState.wordsDestroyed % 5 === 0) {
+                gameState.currentLevel = Math.floor(gameState.wordsDestroyed / 5) + 1;
+            }
+
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function handleInput(e) {
+            if (!gameState.isRunning || gameState.isPaused) return;
+            // Use trimmed current input for comparisons
+            const currentRaw = gameInput.value.toLowerCase();
+            const typed = currentRaw.trim();
+
+            // If input cleared, reset highlights and track previous input
+            if (typed.length === 0) {
+                gameState.wordsList.forEach(w => w.element.classList.remove('typed'));
+                gameState._prevInput = '';
+                return;
+            }
+
+            // Determine how many characters were added since last input
+            const prev = gameState._prevInput || '';
+            const added = Math.max(0, typed.length - prev.length);
+
+            // Count added keystrokes
+            if (added > 0) {
+                gameState.totalKeystrokes += added;
+
+                // Find best matching target word (longest common prefix with current input)
+                let bestObj = null;
+                let bestMatchLen = -1;
+                for (let w of gameState.wordsList) {
+                    const wordLower = w.word.toLowerCase();
+                    let matchLen = 0;
+                    while (matchLen < typed.length && matchLen < wordLower.length && typed[matchLen] === wordLower[matchLen]) {
+                        matchLen++;
+                    }
+                    if (matchLen > bestMatchLen) {
+                        bestMatchLen = matchLen;
+                        bestObj = w;
+                    }
+                }
+
+                // Count how many of the newly added characters are correct against the chosen target
+                if (bestObj) {
+                    let correctAdded = 0;
+                    const target = bestObj.word.toLowerCase();
+                    for (let i = prev.length; i < typed.length; i++) {
+                        if (i < target.length && typed[i] === target[i]) correctAdded++;
+                    }
+                    gameState.correctKeystrokes += correctAdded;
+                }
+            }
+
+            // Highlighting: update first word element preview only (visual cue)
+            let highlightedText = '';
+            const firstWord = gameState.wordsList[0];
+            for (let i = 0; i < typed.length; i++) {
+                const currentWord = firstWord?.word.toLowerCase();
+                if (currentWord && typed[i] === currentWord[i]) {
+                    highlightedText += `<span style='color: green;'>${typed[i]}</span>`;
+                } else {
+                    highlightedText += `<span style='color: red;'>${typed[i]}</span>`;
+                }
+            }
+            if (firstWord) {
+                firstWord.element.innerHTML = highlightedText + firstWord.word.slice(typed.length);
+            }
+
+            // Mark matching words and check completion
+            for (let wordObj of gameState.wordsList) {
+                if (wordObj.word.toLowerCase().startsWith(typed)) {
+                    wordObj.element.classList.add('typed');
+                    // Check if word is completed
+                    if (typed === wordObj.word.toLowerCase()) {
+                        destroyWord(wordObj);
+                        gameInput.value = '';
+                        gameState._prevInput = '';
+                        return;
+                    }
+                } else {
+                    wordObj.element.classList.remove('typed');
+                }
+            }
+
+            // Save current input for next event
+            gameState._prevInput = typed;
+        }
+
+        function destroyWord(wordObj) {
+            gameState.wordsDestroyed++;
+            gameState.score += 100 * gameState.currentLevel;
+            
+            wordObj.element.classList.add('completed');
+            gameState.wordsList = gameState.wordsList.filter(w => w !== wordObj);
+            
+            setTimeout(() => {
+                wordObj.element.remove();
+            }, 500);
+        }
+
+        function togglePause() {
+            gameState.isPaused = !gameState.isPaused;
+            document.getElementById('pauseBtn').textContent = gameState.isPaused ? 'Resume' : 'Pause';
+            
+            if (gameState.isPaused) {
+                // Pause the game
+                cancelAnimationFrame(gameLoopId);
+                clearTimeout(spawnLoopId);
+                gameInput.disabled = true;
+                gameState.pausedAt = Date.now();
+            } else {
+                // Resume the game
+                if (gameState.pausedAt) {
+                    gameState.pausedDuration = (gameState.pausedDuration || 0) + (Date.now() - gameState.pausedAt);
+                }
+                gameState.pausedAt = null;
+                gameInput.disabled = false;
+                gameInput.focus();
+                spawnWords();
+                gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function endGame() {
+            gameState.isRunning = false;
+            clearTimeout(spawnLoopId);
+            cancelAnimationFrame(gameLoopId);
+            gameInput.disabled = true;
+            
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalLevel').textContent = gameState.currentLevel;
+            document.getElementById('finalWords').textContent = gameState.wordsDestroyed;
+            document.getElementById('finalAccuracy').textContent = gameState.accuracy + '%';
+            
+            // Save score to database
+            saveZtypeScore();
+            
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        async function saveZtypeScore() {
+            try {
+                const response = await fetch('save-game-score.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        score: gameState.score,
+                        level: gameState.currentLevel,
+                        accuracy: gameState.accuracy,
+                        wpm: gameState.wpm
+                    })
+                });
+                const data = await response.json();
+                console.log('Ztype score saved:', data);
+                const saveEl = document.getElementById('saveStatus');
+                if (data && data.success) {
+                    if (saveEl) {
+                        saveEl.style.display = 'block';
+                        saveEl.textContent = 'Progress saved.';
+                    }
+                } else {
+                    if (saveEl) {
+                        saveEl.style.display = 'block';
+                        saveEl.textContent = 'Unable to save progress.';
+                        saveEl.style.color = '#ff6b6b';
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving score:', error);
+                const saveEl = document.getElementById('saveStatus');
+                if (saveEl) {
+                    saveEl.style.display = 'block';
+                    saveEl.textContent = 'Error saving progress.';
+                    saveEl.style.color = '#ff6b6b';
+                }
+            }
+        }
+
+        function restartGame() {
+            // Stop current game
+            gameState.isRunning = false;
+            gameState.isPaused = false;
+            clearTimeout(spawnLoopId);
+            cancelAnimationFrame(gameLoopId);
+            
+            // Reset game state
+            gameState.currentLevel = 1;
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.maxLives = 3;
+            gameState.wordsDestroyed = 0;
+            gameState.wordsList = [];
+            gameState.totalKeystrokes = 0;
+            gameState.correctKeystrokes = 0;
+            gameState.startTime = Date.now();
+            gameState.pausedAt = null;
+            gameState.pausedDuration = 0;
+            gameState.wpm = 0;
+            gameState.accuracy = 0;
+            // Clear any previous typing buffer so keystroke counting restarts cleanly
+            gameState._prevInput = '';
+            
+            // Clear UI
+            gameArea.innerHTML = '';
+            gameInput.value = '';
+            gameInput.disabled = false;
+            
+            // Reset buttons
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('pauseBtn').textContent = 'Pause';
+            document.getElementById('restartBtn').disabled = false;
+            
+            // Close modals and start fresh
+            document.getElementById('gameOverModal').classList.remove('active');
+            
+            updateLivesDisplay();
+            updateStatsDisplay();
+            gameInput.focus();
+            
+            // Start new game immediately
+            gameState.isRunning = true;
+            spawnWords();
+            gameLoop();
+        }
+
+        function goToDashboard() {
+            window.location.href = 'home.php';
+        }
+
+        document.getElementById('close-modal-btn').onclick = function() {
+            window.location.href = 'home.php';
+        };
+
+        gameInput.addEventListener('input', handleInput);
+
+        // Focus on input when clicking game area
+        gameArea.addEventListener('click', () => {
+            if (gameState.isRunning && !gameState.isPaused) {
+                gameInput.focus();
+            }
+        });
+
+        // Show HUD in fullscreen and hide otherwise to avoid overlap with controls
+        function updateHudForFullscreen() {
+            if (document.fullscreenElement) {
+                document.body.classList.add('show-hud');
+            } else {
+                // only keep HUD if viewport is small (CSS handles this)
+                document.body.classList.remove('show-hud');
+            }
+        }
+
+        document.addEventListener('fullscreenchange', updateHudForFullscreen);
+        window.addEventListener('resize', () => {
+            // if small viewport, ensure HUD visible via CSS media query; if resized to wide, remove show-hud
+            if (window.innerWidth > 1000) document.body.classList.remove('show-hud');
+        });
+    </script>
+</body>
+</html>
