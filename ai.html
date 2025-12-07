@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Generator with Gemini API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 0;
+        }
+        .game-wrapper {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .game-container {
+            width: 100%;
+            flex: 1;
+            background: #0f0f1e;
+            border-bottom: 3px solid #00ff88;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-header {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 15px 20px;
+            border-bottom: 2px solid #00ff88;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .header-left {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .stat-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: 2px solid #00ff88;
+            background: transparent;
+            color: #00ff88;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #00ff88;
+            color: #0f0f1e;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        .game-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        .chat-history::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-history::-webkit-scrollbar-thumb {
+            background-color: #00ff88;
+            border-radius: 4px;
+        }
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .user-message {
+            justify-content: flex-end;
+        }
+        .user-message .message-bubble {
+            background: #00ff88;
+            color: #0f0f1e;
+            border-radius: 8px 8px 2px 8px;
+            padding: 10px 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .model-message {
+            justify-content: flex-start;
+        }
+        .model-message .message-bubble {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            border-radius: 8px 8px 8px 2px;
+            padding: 10px 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #00ff88;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            margin: 8px 0;
+            font-size: 13px;
+            border: 1px solid #00ff88;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .input-area input, .input-area select, .input-area textarea {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+        }
+        .input-area input::placeholder, .input-area textarea::placeholder {
+            color: rgba(0, 255, 136, 0.5);
+        }
+        .input-area input:focus, .input-area select:focus, .input-area textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            background: rgba(0, 255, 136, 0.1);
+        }
+        .input-area button {
+            padding: 12px 20px;
+            background: #00ff88;
+            color: #0f0f1e;
+            border: 2px solid #00ff88;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .input-area button:hover {
+            background: transparent;
+            color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="game-header">
+                <div class="header-left">
+                    <h1 class="title">AI Code Generator & Chat</h1>
+                    <div class="stat-display">
+                        ✓ API Key Loaded
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn" onclick="window.location.href='/games/public/home.php'">← Back to Homepage</button>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div id="chatHistory" class="chat-history">
+                    <div class="message model-message">
+                        <div class="message-bubble">
+                            <strong>AI Assistant</strong><br>
+                            Hello! I'm your AI code assistant. I can:<br>
+                            • Generate code snippets for the typing game<br>
+                            • Answer your coding questions<br>
+                            • Explain complex code concepts<br>
+                            • Help with debugging
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <textarea id="promptInput" placeholder="Type your message here..." rows="1"
+                        onkeydown="handleKey(event)"></textarea>
+                    <button onclick="sendMessage()" id="sendButton" disabled>Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const API_KEY_STORAGE_KEY = 'geminiApiKey';
+        const EMBEDDED_API_KEY = 'AIzaSyDDGN5_tZRcovIWLqmILTuBsNgHgj0I3wk';
+        const MAX_RETRIES = 5;
+
+        let apiKey = EMBEDDED_API_KEY;
+        let chatHistory = [];
+        let isGenerating = false;
+
+        const chatHistoryEl = document.getElementById('chatHistory');
+        const promptInputEl = document.getElementById('promptInput');
+        const sendButtonEl = document.getElementById('sendButton');
+        const codeTypeSelectEl = document.getElementById('codeTypeSelect');
+
+        function showError(title, body) {
+            alert(body);
+        }
+
+        function loadApiKey() {
+            // API key is pre-configured and automatically loaded
+            updateApiKeyStatus(true);
+        }
+
+        function saveApiKey() {
+            // API key is pre-configured - no need to save from input
+            updateApiKeyStatus(true);
+        }
+
+        function updateApiKeyStatus(isValid) {
+            if (isValid) {
+                sendButtonEl.disabled = false;
+            } else {
+                sendButtonEl.disabled = true;
+            }
+        }
+
+        function appendMessage(role, text) {
+            const isUser = role === 'user';
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${isUser ? 'user-message' : 'model-message'}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+
+            if (!isUser) {
+                const header = document.createElement('strong');
+                header.textContent = 'AI Assistant';
+                bubble.appendChild(header);
+                const br = document.createElement('br');
+                bubble.appendChild(br);
+            }
+            
+            // Parse code blocks and format
+            const parts = text.split(/```/);
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 === 0) {
+                    // Regular text
+                    let formattedText = parts[i];
+                    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    formattedText = formattedText.replace(/\n/g, '<br>');
+                    
+                    const span = document.createElement('span');
+                    span.innerHTML = formattedText;
+                    bubble.appendChild(span);
+                } else {
+                    // Code block
+                    const codeBlock = document.createElement('div');
+                    codeBlock.className = 'code-block';
+                    codeBlock.textContent = parts[i].trim();
+                    bubble.appendChild(codeBlock);
+                }
+            }
+            
+            messageEl.appendChild(bubble);
+            chatHistoryEl.appendChild(messageEl);
+            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        }
+
+        function createLoadingIndicator() {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.id = 'loadingIndicator';
+            messageWrapper.className = 'flex justify-start';
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'model-message p-3 shadow-md flex items-center space-x-2';
+            
+            const header = document.createElement('p');
+            header.className = 'font-semibold';
+            header.textContent = 'AI is thinking...';
+
+            const spinner = document.createElement('div');
+            spinner.className = 'animate-pulse text-2xl';
+            spinner.textContent = '...';
+
+            messageBubble.appendChild(header);
+            messageBubble.appendChild(spinner);
+            messageWrapper.appendChild(messageBubble);
+            chatHistoryEl.appendChild(messageWrapper);
+            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+        }
+
+        function removeLoadingIndicator() {
+            const indicator = document.getElementById('loadingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        async function fetchWithBackoff(url, options, retries = 0) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (retries < MAX_RETRIES) {
+                    const delay = Math.pow(2, retries) * 1000;
+                    console.warn(`Request failed (Attempt ${retries + 1}/${MAX_RETRIES}). Retrying in ${delay}ms...`, error);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithBackoff(url, options, retries + 1);
+                } else {
+                    console.error("All retries failed.", error);
+                    throw new Error("Failed to connect to the Gemini API after multiple retries. Check your network or API key.");
+                }
+            }
+        }
+
+        async function generateContent(history, systemInstruction) {
+            const url = `${API_URL_BASE}?key=${apiKey}`;
+            
+            const payload = {
+                contents: history,
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                },
+            };
+
+            const options = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            };
+            
+            const response = await fetchWithBackoff(url, options);
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts[0] && result.candidates[0].content.parts[0].text) {
+                return result.candidates[0].content.parts[0].text;
+            } else if (result.error) {
+                throw new Error(result.error.message || "An unknown API error occurred.");
+            } else {
+                throw new Error("Unexpected API response format. Check the model output.");
+            }
+        }
+
+        async function sendMessage() {
+            if (isGenerating || !apiKey) return;
+            
+            const prompt = promptInputEl.value.trim();
+            if (prompt === "") return;
+
+            isGenerating = true;
+            promptInputEl.disabled = true;
+            sendButtonEl.disabled = true;
+            promptInputEl.value = '';
+            promptInputEl.style.height = 'auto';
+
+            appendMessage('user', prompt);
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            
+            createLoadingIndicator();
+
+            try {
+                const systemInstruction = "You are a helpful AI assistant specialized in generating code snippets and answering coding questions. When asked to generate code, provide clean, well-commented code snippets. Format code in markdown code blocks. Be concise and helpful.";
+
+                const aiResponseText = await generateContent(chatHistory, systemInstruction);
+
+                chatHistory.push({ role: "model", parts: [{ text: aiResponseText }] });
+                
+                removeLoadingIndicator();
+                appendMessage('model', aiResponseText);
+
+            } catch (error) {
+                console.error("Chat generation failed:", error);
+                removeLoadingIndicator();
+                chatHistory.pop(); 
+                
+                appendMessage('model', `**Error:** ${error.message}. Please check your API key, console logs, or network connection.`);
+
+            } finally {
+                isGenerating = false;
+                promptInputEl.disabled = false;
+                sendButtonEl.disabled = !apiKey;
+                promptInputEl.focus();
+            }
+        }
+
+        async function generateGameCode() {
+            if (isGenerating || !apiKey) {
+                showError('Error', 'API key is required. Please enter your Gemini API key above.');
+                return;
+            }
+
+            const codeType = codeTypeSelectEl.value;
+            
+            if (codeType === 'ask') {
+                showError('Info', 'Please select a code type to generate (Easy, Medium, or Hard) and click Quick Generate again.');
+                return;
+            }
+
+            isGenerating = true;
+            createLoadingIndicator();
+
+            try {
+                let prompt = '';
+                
+                if (codeType === 'generate') {
+                    prompt = `Generate 3 random JavaScript code snippets for a typing game. Make them varied and interesting. Format as:
+                    1. [code]
+                    2. [code]
+                    3. [code]`;
+                } else {
+                    const difficultyMap = { 'easy': 'Easy (simple, short)', 'medium': 'Medium (moderate complexity)', 'hard': 'Hard (complex, advanced)' };
+                    prompt = `Generate 5 ${difficultyMap[codeType]} JavaScript or Python code snippets suitable for a typing practice game. Each snippet should be on one line. Format as a numbered list.`;
+                }
+
+                const systemInstruction = "You are a code snippet generator for a typing game. Generate realistic, useful code snippets that are appropriate for practicing typing skills.";
+
+                const response = await generateContent(
+                    [{ role: "user", parts: [{ text: prompt }] }],
+                    systemInstruction
+                );
+
+                removeLoadingIndicator();
+                appendMessage('model', response);
+
+            } catch (error) {
+                console.error("Code generation failed:", error);
+                removeLoadingIndicator();
+                appendMessage('model', `**Error:** ${error.message}`);
+            } finally {
+                isGenerating = false;
+            }
+        }
+
+        function handleKey(event) {
+            promptInputEl.style.height = 'auto';
+            promptInputEl.style.height = promptInputEl.scrollHeight + 'px';
+
+            if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        window.onload = () => {
+            loadApiKey();
+            promptInputEl.focus();
+        };
+
+    </script>
+</body>
+</html>
